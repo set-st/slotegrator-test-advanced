@@ -12,7 +12,7 @@ class m200205_082014_init extends Migration
      */
     public function safeUp()
     {
-        $this->createTable('wins', [
+        $this->createTable('{{%wins}}', [
             'id' => $this->primaryKey(),
             'uId' => $this->integer(12)->notNull(),
             'type' => $this->integer(2)->null()->defaultValue(1),
@@ -21,6 +21,10 @@ class m200205_082014_init extends Migration
             'createdAt' => $this->dateTime()->null(),
             'sendAt' => $this->dateTime()->null(),
         ]);
+
+        $this->createIndex('type', '{{%wins}}', 'type');
+        $this->createIndex('createdAt', '{{%wins}}', 'createdAt');
+        $this->createIndex('sendAt', '{{%wins}}', 'sendAt');
     }
 
     /**
@@ -28,8 +32,6 @@ class m200205_082014_init extends Migration
      */
     public function safeDown()
     {
-        echo "m200205_082014_init cannot be reverted.\n";
-
-        return false;
+        $this->dropTable('{{%wins}}');
     }
 }
