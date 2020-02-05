@@ -1,8 +1,10 @@
 <?php
 namespace frontend\controllers;
 
+use common\models\Wins;
 use frontend\models\ResendVerificationEmailForm;
 use frontend\models\VerifyEmailForm;
+use frontend\models\WinForm;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
@@ -36,7 +38,7 @@ class SiteController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['logout'],
+                        'actions' => ['logout', 'item-reject'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -74,7 +76,26 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+        $model = new WinForm();
+
+        if($model->load(\Yii::$app->request->post())){
+            if($model->pull() == false){
+                \Yii::$app->session->addFlash('error', \Yii::t('app', 'You win nothing, sorry :('));
+            }
+        }
+
+        return $this->render('index', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionItemReject($id)
+    {
+        if($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()){
+            $gift->delete();
+        }
+
+        return $this->redirect($_SERVER['HTTP_REFERER']);
     }
 
     /**
