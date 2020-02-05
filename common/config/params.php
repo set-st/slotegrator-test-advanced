@@ -7,6 +7,7 @@ return [
     'user.passwordResetTokenExpire' => 3600,
     'money' => [
         'limit' => 1000,
+        'bonusMultiplier' => 2,
         'interval' => [
             'min' => 1,
             'max' => 100,

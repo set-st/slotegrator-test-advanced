@@ -36,6 +36,7 @@ class WinForm extends Model
             case Wins::TYPE_MONEY:
                 $amount = Wins::getMoneyGift();
                 if(!empty($amount)){
+                    $params = \Yii::$app->params['money'];
                     $win = new Wins();
                     $win->uId = \Yii::$app->user->identity->getId();
                     $win->type = Wins::TYPE_MONEY;
@@ -43,8 +44,12 @@ class WinForm extends Model
                     $win->createdAt = date('Y-m-d H:i:s');
                     if($win->save()){
                         $return = true;
-                        \Yii::$app->session->addFlash('success', \Yii::t('app', 'You win money: {amount}', [
+                        \Yii::$app->session->addFlash('success', \Yii::t('app', 'You win money: {amount}, {convert}', [
                             'amount' => $amount,
+                            'convert' => \Yii::t('app', '<a href="{url}">You may convert it to bonuses, will be {amount} bonuses.</a>', [
+                                'amount' => $amount * $params['bonusMultiplier'],
+                                'url' => Url::to(['site/to-bonuses', 'id' => $win->id])
+                            ]),
                         ]));
                     }
                 }

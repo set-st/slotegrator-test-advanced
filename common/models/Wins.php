@@ -111,4 +111,13 @@ class Wins extends \yii\db\ActiveRecord
 
         return $free;
     }
+
+    public function toBonuses()
+    {
+        $params = \Yii::$app->params['money'];
+        $amount = $this->amount * $params['bonusMultiplier'];
+        $this->amount = $amount;
+        $this->type = self::TYPE_BONUSES;
+        return $amount;
+    }
 }

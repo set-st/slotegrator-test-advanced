@@ -38,7 +38,7 @@ class SiteController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['logout', 'item-reject'],
+                        'actions' => ['logout', 'item-reject', 'to-bonuses'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -92,7 +92,22 @@ class SiteController extends Controller
     public function actionItemReject($id)
     {
         if($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()){
+            \Yii::$app->session->setFlash('success', \Yii::t('app', 'Success'));
             $gift->delete();
+        }
+
+        return $this->redirect($_SERVER['HTTP_REFERER']);
+    }
+
+    public function actionToBonuses($id)
+    {
+        if($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()){
+            $amount = $gift->toBonuses();
+            if($gift->save()){
+                \Yii::$app->session->setFlash('success', \Yii::t('app', 'Now you get plus {amount} bonuses', [
+                    'amount' => $amount,
+                ]));
+            }
         }
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
