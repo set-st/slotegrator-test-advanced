@@ -60,6 +60,11 @@ class Wins extends \yii\db\ActiveRecord
         ];
     }
 
+    /**
+     * Возвращает свободный итем базируясь на уже полученых подарках. Как бы из остатка
+     * @param int $counter
+     * @return |null
+     */
     public static function getFreeItem($counter = 0)
     {
         // немного неэкономно в плане загрузки базы данны, но всегда актуально
@@ -72,14 +77,13 @@ class Wins extends \yii\db\ActiveRecord
         $items = array_column($items, 'description', 'description');
 
         $params = \Yii::$app->params['items'];
-        $randItem = rand(0, (count($params)-1));
+        $randItem = rand(0, (count($params) - 1));
 
-        if(!in_array($params[$randItem], $items)){
+        if (!in_array($params[$randItem], $items)) {
             return $params[$randItem];
-        }
-        else{
+        } else {
             // если счетчик попыток превысил объем списка итемов, то выходим
-            if($counter >= count($params)){
+            if ($counter >= count($params)) {
                 return null;
             }
             $counter++;
@@ -87,6 +91,10 @@ class Wins extends \yii\db\ActiveRecord
         }
     }
 
+    /**
+     * Возвращает приз в деньгах учитывая общий лимит
+     * @return int|mixed|null
+     */
     public static function getMoneyGift()
     {
         $sum = self::find()
@@ -99,19 +107,23 @@ class Wins extends \yii\db\ActiveRecord
         $params = \Yii::$app->params['money'];
         $amount = rand($params['interval']['min'], $params['interval']['max']);
 
-        if($sum['sum'] >= $params['limit']){
+        if ($sum['sum'] >= $params['limit']) {
             return null;
         }
 
         $free = $params['limit'] - $sum['sum'];
 
-        if($amount <= $free){
+        if ($amount <= $free) {
             return $amount;
         }
 
         return $free;
     }
 
+    /**
+     * Выполняте перевод в бонусы
+     * @return float|int
+     */
     public function toBonuses()
     {
         $params = \Yii::$app->params['money'];
@@ -119,5 +131,26 @@ class Wins extends \yii\db\ActiveRecord
         $this->amount = $amount;
         $this->type = self::TYPE_BONUSES;
         return $amount;
+    }
+
+    /**
+     * Отправляет деньги в банк
+     * @return bool
+     * @throws \Throwable
+     */
+    public function toBank()
+    {
+        try {
+            $return = \Yii::$app->toBank->send($this->amount);
+            if ($return) {
+                $this->sendAt = date('Y-m-d H:i:s');
+                $this->save();
+                return true;
+            }
+        } catch (\Exception $e) {
+            \Yii::error('send to bank error');
+        }
+
+        return false;
     }
 }

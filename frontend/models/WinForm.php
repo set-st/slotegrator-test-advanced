@@ -20,7 +20,12 @@ class WinForm extends Model
         ];
     }
 
-    public function pull(){
+    public function pull()
+    {
+
+        if (!$this->validate()) {
+            return false;
+        }
 
         $return = false;
 
@@ -30,27 +35,32 @@ class WinForm extends Model
             Wins::TYPE_ITEM,
         ];
 
-        $randType = rand(0,(count($types)-1));
+        $randType = rand(0, (count($types) - 1));
 
-        switch ($types[$randType]){
+        switch ($types[$randType]) {
             case Wins::TYPE_MONEY:
                 $amount = Wins::getMoneyGift();
-                if(!empty($amount)){
+                if (!empty($amount)) {
                     $params = \Yii::$app->params['money'];
                     $win = new Wins();
                     $win->uId = \Yii::$app->user->identity->getId();
                     $win->type = Wins::TYPE_MONEY;
                     $win->amount = $amount;
                     $win->createdAt = date('Y-m-d H:i:s');
-                    if($win->save()){
+                    if ($win->save()) {
                         $return = true;
-                        \Yii::$app->session->addFlash('success', \Yii::t('app', 'You win money: {amount}, {convert}', [
-                            'amount' => $amount,
-                            'convert' => \Yii::t('app', '<a href="{url}">You may convert it to bonuses, will be {amount} bonuses.</a>', [
-                                'amount' => $amount * $params['bonusMultiplier'],
-                                'url' => Url::to(['site/to-bonuses', 'id' => $win->id])
-                            ]),
-                        ]));
+                        \Yii::$app->session->addFlash('success',
+                            \Yii::t('app', 'You win money: {amount}, {convert}. {toBank}', [
+                                'amount' => $amount,
+                                'convert' => \Yii::t('app',
+                                    '<a href="{url}">You may convert it to bonuses, will be {amount} bonuses.</a>', [
+                                        'amount' => $amount * $params['bonusMultiplier'],
+                                        'url' => Url::to(['site/to-bonuses', 'id' => $win->id])
+                                    ]),
+                                'toBank' => \Yii::t('app', '<a href="{url}">Move out to bank account</a>', [
+                                    'url' => Url::to(['site/to-bank', 'id' => $win->id])
+                                ])
+                            ]));
                     }
                 }
                 break;
@@ -62,7 +72,7 @@ class WinForm extends Model
                 $win->type = Wins::TYPE_BONUSES;
                 $win->amount = $amount;
                 $win->createdAt = date('Y-m-d H:i:s');
-                if($win->save()){
+                if ($win->save()) {
                     $return = true;
                     \Yii::$app->session->addFlash('success', \Yii::t('app', 'You win bonuses: {amount}', [
                         'amount' => $amount,
@@ -71,13 +81,13 @@ class WinForm extends Model
                 break;
             case Wins::TYPE_ITEM:
                 $item = Wins::getFreeItem();
-                if(!empty($item)){
+                if (!empty($item)) {
                     $win = new Wins();
                     $win->uId = \Yii::$app->user->identity->getId();
                     $win->type = Wins::TYPE_ITEM;
                     $win->description = $item;
                     $win->createdAt = date('Y-m-d H:i:s');
-                    if($win->save()){
+                    if ($win->save()) {
                         $return = true;
                         \Yii::$app->session->addFlash('success', \Yii::t('app', 'You win this item {item}. {reject}', [
                             'item' => $item,

@@ -1,4 +1,5 @@
 <?php
+
 namespace frontend\controllers;
 
 use common\models\Wins;
@@ -38,7 +39,7 @@ class SiteController extends Controller
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['logout', 'item-reject', 'to-bonuses'],
+                        'actions' => ['logout', 'item-reject', 'to-bonuses', 'to-bank'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -78,8 +79,8 @@ class SiteController extends Controller
     {
         $model = new WinForm();
 
-        if($model->load(\Yii::$app->request->post())){
-            if($model->pull() == false){
+        if ($model->load(\Yii::$app->request->post())) {
+            if ($model->pull() == false) {
                 \Yii::$app->session->addFlash('error', \Yii::t('app', 'You win nothing, sorry :('));
             }
         }
@@ -91,7 +92,7 @@ class SiteController extends Controller
 
     public function actionItemReject($id)
     {
-        if($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()){
+        if ($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()) {
             \Yii::$app->session->setFlash('success', \Yii::t('app', 'Success'));
             $gift->delete();
         }
@@ -101,12 +102,25 @@ class SiteController extends Controller
 
     public function actionToBonuses($id)
     {
-        if($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()){
+        if ($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()) {
             $amount = $gift->toBonuses();
-            if($gift->save()){
+            if ($gift->save()) {
                 \Yii::$app->session->setFlash('success', \Yii::t('app', 'Now you get plus {amount} bonuses', [
                     'amount' => $amount,
                 ]));
+            }
+        }
+
+        return $this->redirect($_SERVER['HTTP_REFERER']);
+    }
+
+    public function actionToBank($id)
+    {
+        if ($gift = Wins::find()->where(['id' => $id])->andWhere(['uId' => \Yii::$app->user->identity->getId()])->one()) {
+            if ($gift->toBank()) {
+                \Yii::$app->session->setFlash('success', \Yii::t('app', 'Success'));
+            } else {
+                \Yii::$app->session->setFlash('error', \Yii::t('app', 'Something was wrong'));
             }
         }
 
@@ -158,7 +172,8 @@ class SiteController extends Controller
         $model = new ContactForm();
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
+                Yii::$app->session->setFlash('success',
+                    'Thank you for contacting us. We will respond to you as soon as possible.');
             } else {
                 Yii::$app->session->setFlash('error', 'There was an error sending your message.');
             }
@@ -190,7 +205,8 @@ class SiteController extends Controller
     {
         $model = new SignupForm();
         if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
+            Yii::$app->session->setFlash('success',
+                'Thank you for registration. Please check your inbox for verification email.');
             return $this->goHome();
         }
 
@@ -213,7 +229,8 @@ class SiteController extends Controller
 
                 return $this->goHome();
             } else {
-                Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+                Yii::$app->session->setFlash('error',
+                    'Sorry, we are unable to reset password for the provided email address.');
             }
         }
 
@@ -252,8 +269,8 @@ class SiteController extends Controller
      * Verify email address
      *
      * @param string $token
-     * @throws BadRequestHttpException
      * @return yii\web\Response
+     * @throws BadRequestHttpException
      */
     public function actionVerifyEmail($token)
     {
@@ -286,7 +303,8 @@ class SiteController extends Controller
                 Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
                 return $this->goHome();
             }
-            Yii::$app->session->setFlash('error', 'Sorry, we are unable to resend verification email for the provided email address.');
+            Yii::$app->session->setFlash('error',
+                'Sorry, we are unable to resend verification email for the provided email address.');
         }
 
         return $this->render('resendVerificationEmail', [

@@ -9,5 +9,9 @@ return [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
+        'toBank' => [
+            'class' => \common\components\ToBank::class,
+            'bankUrl' => 'http://bank.com',
+        ],
     ],
 ];
